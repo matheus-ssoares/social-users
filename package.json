@@ -1,0 +1,28 @@
+{
+  "name": "SocialMediaBack",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node-dev --respawn --transpile-only ./src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@types/bcrypt": "^3.0.0",
+    "bcrypt": "^5.0.1",
+    "env": "^0.0.2",
+    "express": "^4.17.1",
+    "postgresql": "^0.0.1",
+    "typeorm": "^0.2.31"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/node": "^8.0.29",
+    "pg": "^8.5.1",
+    "reflect-metadata": "^0.1.13",
+    "ts-node": "3.3.0",
+    "ts-node-dev": "^1.1.6",
+    "tslint": "5.12.1",
+    "typescript": "3.3.3333"
+  }
+}
