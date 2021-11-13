@@ -1,39 +1,62 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from "typeorm";
-import addresses from "./addresses";
-import contacts from "./contacts";
+import { IsEmail, IsIn, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  Index,
+  Unique,
+  OneToMany,
+} from 'typeorm';
+import addresses from './addresses';
+import contacts from './contacts';
+import posts from './posts';
+import post_likes from './post_likes';
 
-@Entity({ name: "users" })
+export enum Gender {
+  M = 'M',
+  F = 'F',
+}
+@Entity({ name: 'users' })
+@Unique('UNIQUE_USER_EMAIL_CONSTRAINT', ['email'])
 export default class users {
+  @PrimaryGeneratedColumn()
+  id: string;
 
-    @PrimaryGeneratedColumn()
-    id: string;
+  @Column()
+  @IsNotEmpty()
+  name: string;
 
-    @Column()
-    name: string;
+  @Column()
+  @IsEmail()
+  email: string;
 
-    @Column()
-    email: string;
+  @Column()
+  @IsNotEmpty()
+  birth_date: string;
 
-    @Column()
-    document: string;
+  @Column()
+  @IsNotEmpty()
+  /*  @IsIn(['F', 'M']) */
+  gender: Gender;
 
-    @Column()
-    birth_date: string;
+  @Column()
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
 
-    @Column()
-    gender: string;
+  @Column()
+  image: string;
 
-    @Column()
-    password: string;
+  @OneToMany(() => posts, (posts) => posts.user)
+  posts: posts;
 
-    @Column()
-    image: string;
+  @OneToMany(() => post_likes, (postLikes) => postLikes.user)
+  post_likes: post_likes;
 
-    @OneToOne(() => addresses, (address) => address.user)
-    address: addresses;
+  @OneToOne(() => addresses, (address) => address.user)
+  address: addresses;
 
-    @OneToOne(() => contacts, (contact) => contact.user)
-    contacts: contacts;
-
-
+  @OneToOne(() => contacts, (contact) => contact.user)
+  contacts: contacts;
 }

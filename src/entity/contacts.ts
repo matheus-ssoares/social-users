@@ -1,31 +1,38 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from "typeorm";
-import User from "./User";
+import { IsNotEmpty } from 'class-validator';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
+import User from './User';
 
-@Entity({ name: "contacts" })
+@Entity({ name: 'contacts' })
 export default class contacts {
+  @PrimaryGeneratedColumn()
+  id: string;
 
-    @PrimaryGeneratedColumn()
-    id: string;
+  @Column()
+  @IsNotEmpty()
+  contact_name: string;
 
-    @Column()
-    contact_name: string;
+  @Column()
+  @IsNotEmpty()
+  phone: string;
 
-    @Column()
-    phone: string;
+  @Column()
+  user_id: string;
 
-    @Column()
-    user_id: string;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-    @CreateDateColumn({ name: 'created_at' })
-    createdAt: Date;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at' })
-    updatedAt: Date;
-
-    @OneToOne(() => User, (user) => user.address)
-    @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-    user: User;
-
-
+  @OneToOne(() => User, (user) => user.address)
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+  user: User;
 }
-
