@@ -1,9 +1,16 @@
-import express from 'express'
+import express, { Request, Response } from 'express';
+import { protect } from '../controllers/authController';
+import * as userController from '../controllers/userController';
+import { UserRegister } from '../interfaces/userInterfaces';
+const userRoutes = express.Router();
 
-const userRoutes = express.Router()
+userRoutes.post(
+  '/users',
 
-import * as userController from '../controllers/userController'
+  (req: Request<any, any, UserRegister>, res: Response) => {
+    userController.userRegister(req, res);
+  }
+);
+userRoutes.patch('/users', protect, userController.updateProfileImage);
 
-userRoutes.post('/user-register', userController.userRegister)
-
-export default userRoutes
+export default userRoutes;
