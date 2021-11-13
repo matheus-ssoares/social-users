@@ -1,8 +1,13 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
-export class users1611935547434 implements MigrationInterface {
+export class postImages1635638375210 implements MigrationInterface {
   private table = new Table({
-    name: 'users',
+    name: 'post_images',
     columns: [
       {
         name: 'id',
@@ -14,38 +19,17 @@ export class users1611935547434 implements MigrationInterface {
         generationStrategy: 'uuid',
         default: `uuid_generate_v4()`,
       },
-      {
-        name: 'name',
-        type: 'varchar',
-        isNullable: false,
-      },
-      {
-        name: 'email',
-        type: 'varchar',
-        isNullable: false,
-        isUnique: true,
-      },
-      {
-        name: 'password',
-        type: 'varchar',
-        isNullable: false,
-      },
-      {
-        name: 'birth_date',
-        type: 'varchar',
-        isNullable: false,
-      },
-      {
-        name: 'gender',
-        type: 'varchar',
-        /* enum: ['M', 'F'], */
-        isNullable: false,
-      },
 
       {
         name: 'image',
         type: 'varchar',
         isNullable: false,
+      },
+      {
+        name: 'post_id',
+        type: 'uuid',
+        generationStrategy: 'uuid',
+        default: `uuid_generate_v4()`,
       },
       {
         name: 'created_at',
@@ -61,12 +45,22 @@ export class users1611935547434 implements MigrationInterface {
       },
     ],
   });
+  private post_id_fk = new TableForeignKey({
+    columnNames: ['post_id'],
+    referencedColumnNames: ['id'],
+    referencedTableName: 'posts',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(this.table);
+
+    await queryRunner.createForeignKey('post_images', this.post_id_fk);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropForeignKey('post_images', this.post_id_fk);
     await queryRunner.dropTable(this.table);
   }
 }

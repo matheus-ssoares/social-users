@@ -1,8 +1,13 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
-export class users1611935547434 implements MigrationInterface {
+export class Post1635637861194 implements MigrationInterface {
   private table = new Table({
-    name: 'users',
+    name: 'posts',
     columns: [
       {
         name: 'id',
@@ -15,37 +20,20 @@ export class users1611935547434 implements MigrationInterface {
         default: `uuid_generate_v4()`,
       },
       {
-        name: 'name',
+        name: 'content',
         type: 'varchar',
         isNullable: false,
       },
-      {
-        name: 'email',
-        type: 'varchar',
-        isNullable: false,
-        isUnique: true,
-      },
-      {
-        name: 'password',
-        type: 'varchar',
-        isNullable: false,
-      },
-      {
-        name: 'birth_date',
-        type: 'varchar',
-        isNullable: false,
-      },
-      {
-        name: 'gender',
-        type: 'varchar',
-        /* enum: ['M', 'F'], */
-        isNullable: false,
-      },
-
       {
         name: 'image',
         type: 'varchar',
         isNullable: false,
+      },
+      {
+        name: 'user_id',
+        type: 'uuid',
+        generationStrategy: 'uuid',
+        default: `uuid_generate_v4()`,
       },
       {
         name: 'created_at',
@@ -61,12 +49,22 @@ export class users1611935547434 implements MigrationInterface {
       },
     ],
   });
+  private user_id_fk = new TableForeignKey({
+    columnNames: ['user_id'],
+    referencedColumnNames: ['id'],
+    referencedTableName: 'users',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(this.table);
+
+    await queryRunner.createForeignKey('posts', this.user_id_fk);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropForeignKey('posts', this.user_id_fk);
     await queryRunner.dropTable(this.table);
   }
 }
