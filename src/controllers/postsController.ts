@@ -72,7 +72,7 @@ export const createPost = async (
       status: 'success',
       post: { ...post[0] },
     });
-  } catch (error: any) {
+  } catch (error) {
     await queryRunner.rollbackTransaction();
     return res.status(400).send({
       status: 'failed',
@@ -84,9 +84,11 @@ export const createPost = async (
 };
 export const getAllPosts = async (req: Request, res: Response) => {
   const postsRepository = getRepository(posts);
+  const { skip } = req.params;
 
   try {
-    const allPosts = await postsRepository.find({
+    //TODO change request to query builder
+    const [allPosts, total] = await postsRepository.findAndCount({
       relations: [
         'user',
         'post_images',
@@ -96,9 +98,17 @@ export const getAllPosts = async (req: Request, res: Response) => {
         'post_comments.user',
       ],
       order: { created_at: 'DESC' },
+      skip: Number(skip),
+      take: 15,
+    });
+    const formatedPosts = allPosts.map((post) => {
+      return {
+        ...post,
+        post_comments: post.post_comments.slice(0, 3),
+      };
     });
 
-    return res.status(200).json(allPosts);
+    return res.status(200).json({ posts: formatedPosts, total });
   } catch (error) {
     return res.status(500).json({ status: 'Error', message: 'failed' });
   }

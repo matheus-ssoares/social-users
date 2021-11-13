@@ -6,18 +6,12 @@ const postsRoutes = express.Router();
 
 postsRoutes.post('/posts', protect, postsController.createPost);
 
-postsRoutes.get('/posts', protect, postsController.getAllPosts);
+postsRoutes.get('/posts/:skip', protect, postsController.getAllPosts);
 
 postsRoutes.post('/posts/likes', protect, postsController.createPostLike);
 
 postsRoutes.delete('/posts/likes/:id', protect, postsController.deletePostLike);
 
 postsRoutes.get('/posts/likes/:id', protect, postsController.getAllPostLikes);
-
-postsRoutes.post(
-  '/posts/comments',
-  protect,
-  postCommentsController.createPostComment
-);
 
 export default postsRoutes;

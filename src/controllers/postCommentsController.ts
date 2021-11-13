@@ -43,10 +43,28 @@ export const createPostComment = async (req: Request, res: Response) => {
     return res.status(201).json({
       ...findCreatedComment,
     });
-  } catch (error: any) {
+  } catch (error) {
     await queryRunner.rollbackTransaction();
     return res.status(500).json({ status: 'Error', message: error.detail });
   } finally {
     await queryRunner.release();
+  }
+};
+
+export const getAllPostComments = async (req: Request, res: Response) => {
+  const { id: post_id } = req.params;
+
+  const postCommentsRepository = getRepository(post_comments);
+
+  try {
+    const [comments, total] = await postCommentsRepository.findAndCount({
+      where: { post_id },
+      relations: ['user'],
+    });
+    return res.status(200).json({
+      comments: comments,
+    });
+  } catch (error) {
+    return res.status(500);
   }
 };
