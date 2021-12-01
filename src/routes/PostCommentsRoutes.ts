@@ -11,9 +11,15 @@ postCommentRoutes.post(
 );
 
 postCommentRoutes.get(
-  '/posts/comments/:id',
+  '/posts/comments/:id/:skip',
   protect,
   postCommentsController.getAllPostComments
+);
+
+postCommentRoutes.delete(
+  '/posts/comments/:id',
+  protect,
+  postCommentsController.deletePostComments
 );
 
 export default postCommentRoutes;

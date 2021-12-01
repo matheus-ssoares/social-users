@@ -104,7 +104,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
     const formatedPosts = allPosts.map((post) => {
       return {
         ...post,
-        post_comments: post.post_comments.slice(0, 3),
+        post_comments: post.post_comments.slice(0, 4),
       };
     });
 

@@ -52,7 +52,14 @@ export const createPostComment = async (req: Request, res: Response) => {
 };
 
 export const getAllPostComments = async (req: Request, res: Response) => {
-  const { id: post_id } = req.params;
+  const { id: post_id, skip } = req.params;
+
+  if (!post_id || !skip) {
+    return res.status(400).json({
+      status: 'Error',
+      message: 'id and skip are required',
+    });
+  }
 
   const postCommentsRepository = getRepository(post_comments);
 
@@ -60,11 +67,36 @@ export const getAllPostComments = async (req: Request, res: Response) => {
     const [comments, total] = await postCommentsRepository.findAndCount({
       where: { post_id },
       relations: ['user'],
+      skip: Number(skip),
+      take: 15,
     });
     return res.status(200).json({
-      comments: comments,
+      total,
+      postComments: comments,
     });
   } catch (error) {
     return res.status(500);
+  }
+};
+
+export const deletePostComments = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const { userId } = req.body;
+  const postCommentsRepository = getRepository(post_comments);
+
+  const findPostComment = await postCommentsRepository.findOne({
+    where: { id, user_id: userId },
+  });
+
+  if (!findPostComment) {
+    return res.sendStatus(404);
+  }
+
+  try {
+    await postCommentsRepository.delete({ id, user_id: userId });
+    return res.sendStatus(200);
+  } catch (error) {
+    return res.sendStatus(500);
   }
 };

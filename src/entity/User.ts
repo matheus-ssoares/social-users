@@ -41,6 +41,15 @@ export default class users {
   gender: Gender;
 
   @Column()
+  token_version: number;
+
+  @Column()
+  refresh_token_version: number;
+
+  @Column()
+  reset_password_token: string;
+
+  @Column()
   @IsNotEmpty()
   @MinLength(6)
   password: string;

@@ -12,9 +12,8 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 
 app.use(cors({ origin: ['http://localhost:3000'] }));
-
 app.use(express.json({ limit: '10000mb' }));
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));
 app.use(index, userRoutes, authRoutes, postsRoutes, postCommentRoutes);
 
 const expressServer = http.createServer(app);
