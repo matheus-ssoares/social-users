@@ -5,7 +5,9 @@ import { UserRegister } from '../interfaces/userInterfaces';
 import { hash } from 'bcrypt';
 import addresses from '../entity/addresses';
 import contacts from '../entity/contacts';
-import { validate } from 'class-validator';
+import { validate, IsString, MaxLength, IsEmpty } from 'class-validator';
+import * as yup from 'yup';
+import posts from '../entity/posts';
 
 enum PostgresErrorCode {
   UniqueViolation = '23505',
@@ -96,7 +98,7 @@ export const userRegister = async (
       status: 'success',
       createdUser,
     });
-  } catch (error: any) {
+  } catch (error) {
     await queryRunner.rollbackTransaction();
 
     if (error.code === PostgresErrorCode.UniqueViolation) {
@@ -113,33 +115,121 @@ export const userRegister = async (
   }
 };
 
-interface UpdateProfileImageRequestBody {
-  image: string;
-  userId: string;
+class UpdateUserDto {
+  @IsEmpty()
+  @IsString()
+  @MaxLength(40)
+  name: string;
+
+  @IsEmpty()
+  @IsString()
+  @MaxLength(240)
+  biography: string;
 }
 
-export const updateProfileImage = async (
-  req: Request<any, any, UpdateProfileImageRequestBody>,
-  res: Response
-) => {
-  const { image, userId } = req.body;
+var schema = {
+  name: {
+    type: String,
+    required: false,
+    length: {
+      min: 3,
+      max: 36,
+    },
+  },
+  biography: {
+    type: String,
+    required: false,
+    length: {
+      min: 3,
+      max: 36,
+    },
+  },
+};
 
-  if (!image) {
-    res.status(400).json({ status: 'Error', message: 'image is required' });
-  }
+export const updateUser = async (req: Request, res: Response) => {
+  const userId = req.body.userId;
+
   const userRepository = getRepository(users);
 
+  //TODO change image updload to multer
+  const validateSchema = yup.object().shape({
+    name: yup.string().optional(),
+    biography: yup.string().optional(),
+    image: yup.string().optional(),
+  });
+  let toUpdate;
   try {
-    await userRepository.update(
-      { id: userId },
-      {
-        image,
-      }
-    );
+    toUpdate = await validateSchema.validate(req.body, {
+      stripUnknown: true,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ error: e.errors.join(', ') });
+  }
+
+  try {
+    await userRepository.update({ id: userId }, { ...toUpdate });
     return res.sendStatus(200);
   } catch (error) {
     return res.status(500).send({
       status: 'failed',
     });
+  }
+};
+
+export const getUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).send({
+      status: 'error',
+      message: 'id is required',
+    });
+  }
+
+  const connection = getConnection();
+  const result = await connection
+    .getRepository(users)
+    .createQueryBuilder('users')
+    .where(`users.id = '${id}'`)
+    .getOne();
+
+  if (!result) {
+    return res.sendStatus(404);
+  }
+
+  return res.json({
+    ...result,
+  });
+};
+
+export const getPostsByUser = async (req: Request, res: Response) => {
+  const { id, skip } = req.params;
+
+  if (!id || !skip) {
+    return res
+      .status(400)
+      .json({ status: 'Error', message: 'missing required params' });
+  }
+
+  const postsRepository = getRepository(posts);
+
+  try {
+    const [posts, total] = await postsRepository.findAndCount({
+      where: { user_id: id },
+      relations: [
+        'user',
+        'post_images',
+        'post_likes',
+        'post_likes.user',
+        'post_comments',
+        'post_comments.user',
+      ],
+      skip,
+      take: 15,
+    });
+    res.json({ total, posts });
+  } catch (error) {
+    return res.status(500).json({ status: 'Error' });
   }
 };

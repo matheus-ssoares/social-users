@@ -36,6 +36,9 @@ export default class users {
   birth_date: string;
 
   @Column()
+  biography: string;
+
+  @Column()
   @IsNotEmpty()
   /*  @IsIn(['F', 'M']) */
   gender: Gender;
@@ -58,7 +61,7 @@ export default class users {
   image: string;
 
   @OneToMany(() => posts, (posts) => posts.user)
-  posts: posts;
+  posts: posts[];
 
   @OneToMany(() => post_likes, (postLikes) => postLikes.user)
   post_likes: post_likes;

@@ -4,6 +4,10 @@ import * as userController from '../controllers/userController';
 import { UserRegister } from '../interfaces/userInterfaces';
 const userRoutes = express.Router();
 
+userRoutes.get('/users/:id', userController.getUser);
+
+userRoutes.get('/users/posts/:id/:skip', userController.getPostsByUser);
+
 userRoutes.post(
   '/users',
 
@@ -11,6 +15,6 @@ userRoutes.post(
     userController.userRegister(req, res);
   }
 );
-userRoutes.patch('/users', protect, userController.updateProfileImage);
+userRoutes.patch('/users', protect, userController.updateUser);
 
 export default userRoutes;
