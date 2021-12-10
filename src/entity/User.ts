@@ -7,11 +7,14 @@ import {
   Index,
   Unique,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import addresses from './addresses';
 import contacts from './contacts';
 import posts from './posts';
 import post_likes from './post_likes';
+import user_followers from './user_followers';
 
 export enum Gender {
   M = 'M',
@@ -65,6 +68,13 @@ export default class users {
 
   @OneToMany(() => post_likes, (postLikes) => postLikes.user)
   post_likes: post_likes;
+
+  @OneToMany(() => user_followers, (user_followers) => user_followers)
+  @JoinColumn({
+    name: 'follower_id',
+    referencedColumnName: 'id',
+  })
+  user_followers: user_followers[];
 
   @OneToOne(() => addresses, (address) => address.user)
   address: addresses;

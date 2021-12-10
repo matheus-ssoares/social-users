@@ -38,10 +38,9 @@ export const userRegister = async (
 
     await queryRunner.startTransaction();
     const userRepository = getRepository(users);
-    const addressesRepository = getRepository(addresses);
     const contactsRepository = getRepository(contacts);
 
-    const hashPassword = await hash(password ? password : '1', 10);
+    const hashPassword = await hash(password ? password : '123', 10);
 
     const createdUser = userRepository.create({
       name: name,
@@ -74,7 +73,6 @@ export const userRegister = async (
 
     let allErrors = [];
 
-    /* const addressErrors = await validate(createdAddress); */
     const contactsErrors = await validate(createdContacts);
 
     allErrors = [...userErrors, ...contactsErrors];
@@ -91,7 +89,6 @@ export const userRegister = async (
       );
     }
 
-    /* await addressesRepository.save(createdAddress); */
     await contactsRepository.save(createdContacts);
     await queryRunner.commitTransaction();
     return res.status(201).send({
@@ -113,37 +110,6 @@ export const userRegister = async (
   } finally {
     await queryRunner.release();
   }
-};
-
-class UpdateUserDto {
-  @IsEmpty()
-  @IsString()
-  @MaxLength(40)
-  name: string;
-
-  @IsEmpty()
-  @IsString()
-  @MaxLength(240)
-  biography: string;
-}
-
-var schema = {
-  name: {
-    type: String,
-    required: false,
-    length: {
-      min: 3,
-      max: 36,
-    },
-  },
-  biography: {
-    type: String,
-    required: false,
-    length: {
-      min: 3,
-      max: 36,
-    },
-  },
 };
 
 export const updateUser = async (req: Request, res: Response) => {
@@ -169,7 +135,13 @@ export const updateUser = async (req: Request, res: Response) => {
 
   try {
     await userRepository.update({ id: userId }, { ...toUpdate });
-    return res.sendStatus(200);
+
+    const updatedUser = await userRepository.findOne({ where: { id: userId } });
+
+    if (updatedUser) {
+      delete updatedUser.password;
+      return res.json(updatedUser);
+    }
   } catch (error) {
     return res.status(500).send({
       status: 'failed',
@@ -227,6 +199,7 @@ export const getPostsByUser = async (req: Request, res: Response) => {
       ],
       skip,
       take: 15,
+      order: { created_at: 'DESC' },
     });
     res.json({ total, posts });
   } catch (error) {
