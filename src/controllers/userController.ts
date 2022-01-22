@@ -9,7 +9,10 @@ import { validate, IsString, MaxLength, IsEmpty } from 'class-validator';
 import * as yup from 'yup';
 import posts from '../entity/posts';
 import { getRequestErrors } from '../utils/getRequestErrors';
-import { RabbitMqQueues } from '../utils/rabbitMqQueues';
+import {
+  RabbitMqQueues,
+  RabbitMqEventTypes,
+} from '../interfaces/rabbitMqQueues';
 import { sendMessage } from '../modules/rabbitMq';
 
 enum PostgresErrorCode {
@@ -69,7 +72,16 @@ export const userRegister = async (
     await contactsRepository.save(createdContacts);
     await queryRunner.commitTransaction();
 
-    sendMessage(RabbitMqQueues.USER_REGISTER, createdUser);
+    const rabbitNotificationPayload = {
+      name: createdUser.name,
+      externalId: createdUser.id,
+    };
+
+    sendMessage(
+      RabbitMqQueues.SOCIAL_USERS,
+      rabbitNotificationPayload,
+      RabbitMqEventTypes.USER_CREATED
+    );
 
     return res.status(201).send({
       ...createdUser,
@@ -119,6 +131,16 @@ export const updateUser = async (req: Request, res: Response) => {
 
     if (updatedUser) {
       delete updatedUser.password;
+
+      const rabbitMqNotification = {
+        name: updatedUser.name,
+        externalId: updatedUser.id,
+      };
+      sendMessage(
+        RabbitMqQueues.SOCIAL_USERS,
+        rabbitMqNotification,
+        RabbitMqEventTypes.USER_UPDATED
+      );
       return res.json(updatedUser);
     }
   } catch (error) {
