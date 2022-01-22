@@ -14,7 +14,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: ['https://social-media-6wr7y8k4u-matheussoares18.vercel.app'],
+    origin: [
+      /* 'https://social-media-sandy.vercel.app', */
+      'http://localhost:3000',
+    ],
   })
 );
 app.use(express.json({ limit: '10000mb' }));

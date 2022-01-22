@@ -46,10 +46,7 @@ export default class posts extends BaseEntity {
   @OneToMany(() => post_comments, (post_comments) => post_comments.posts)
   post_comments: post_comments[];
 
-  @ManyToOne(() => users, (users) => users.posts, {
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => users, (users) => users.posts)
   @JoinColumn({
     name: 'user_id',
     referencedColumnName: 'id',

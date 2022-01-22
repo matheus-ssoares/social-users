@@ -8,6 +8,9 @@ import contacts from '../entity/contacts';
 import { validate, IsString, MaxLength, IsEmpty } from 'class-validator';
 import * as yup from 'yup';
 import posts from '../entity/posts';
+import { getRequestErrors } from '../utils/getRequestErrors';
+import { RabbitMqQueues } from '../utils/rabbitMqQueues';
+import { sendMessage } from '../modules/rabbitMq';
 
 enum PostgresErrorCode {
   UniqueViolation = '23505',
@@ -25,22 +28,14 @@ export const userRegister = async (
 
   await queryRunner.connect();
   try {
-    const {
-      name,
-      email,
-      birth_date,
-      gender,
-      image,
-      password,
-      contact_name,
-      phone,
-    } = req.body;
+    const { name, email, birth_date, gender, image, password, phone } =
+      req.body;
 
     await queryRunner.startTransaction();
     const userRepository = getRepository(users);
     const contactsRepository = getRepository(contacts);
 
-    const hashPassword = await hash(password ? password : '123', 10);
+    const hashPassword = await hash(password, 10);
 
     const createdUser = userRepository.create({
       name: name,
@@ -53,20 +48,12 @@ export const userRegister = async (
     });
     const userErrors = await validate(createdUser);
 
-    if (userErrors.length > 0) {
-      return res.status(400).json(
-        userErrors.map((error) => {
-          return {
-            property: error.property,
-            constraints: error.constraints,
-          };
-        })
-      );
-    }
+    getRequestErrors(res, userErrors);
+
     await userRepository.save(createdUser);
 
     const createdContacts = contactsRepository.create({
-      contact_name: contact_name,
+      contact_name: 'Principal',
       phone: phone,
       user_id: createdUser.id,
     });
@@ -77,23 +64,15 @@ export const userRegister = async (
 
     allErrors = [...userErrors, ...contactsErrors];
 
-    if (allErrors.length > 0) {
-      await queryRunner.rollbackTransaction();
-      return res.status(400).json(
-        allErrors.map((error) => {
-          return {
-            property: error.property,
-            constraints: error.constraints,
-          };
-        })
-      );
-    }
+    getRequestErrors(res, allErrors);
 
     await contactsRepository.save(createdContacts);
     await queryRunner.commitTransaction();
+
+    sendMessage(RabbitMqQueues.USER_REGISTER, createdUser);
+
     return res.status(201).send({
-      status: 'success',
-      createdUser,
+      ...createdUser,
     });
   } catch (error) {
     await queryRunner.rollbackTransaction();
@@ -101,7 +80,7 @@ export const userRegister = async (
     if (error.code === PostgresErrorCode.UniqueViolation) {
       return res.status(400).send({
         status: 'failed',
-        error: 'User with that email already exists',
+        message: 'User with that email already exists',
       });
     }
     return res.status(400).send({

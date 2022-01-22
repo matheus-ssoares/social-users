@@ -4,6 +4,7 @@ import { getConnection, getRepository } from 'typeorm';
 import posts from '../entity/posts';
 import post_images from '../entity/post_images';
 import post_likes from '../entity/post_likes';
+import { getRequestErrors } from '../utils/getRequestErrors';
 
 interface CreatePostRequestBody {
   content: string;
@@ -35,16 +36,9 @@ export const createPost = async (
       updated_at: new Date(),
     });
     const postsErrors = await validate(createdPost);
-    if (postsErrors.length > 0) {
-      return res.status(400).json(
-        postsErrors.map((error) => {
-          return {
-            property: error.property,
-            constraints: error.constraints,
-          };
-        })
-      );
-    }
+
+    getRequestErrors(res, postsErrors);
+
     await postsRepository.save(createdPost);
 
     for (let index = 0; index < postImagesArray.length; index++) {
@@ -86,9 +80,11 @@ export const getAllPosts = async (req: Request, res: Response) => {
   const postsRepository = getRepository(posts);
   const { skip } = req.params;
 
+  const connection = getConnection();
+
   try {
     //TODO change request to query builder
-    const [allPosts, total] = await postsRepository.findAndCount({
+    /* const [allPosts, total] = await postsRepository.findAndCount({
       relations: [
         'user',
         'post_images',
@@ -107,9 +103,35 @@ export const getAllPosts = async (req: Request, res: Response) => {
         post_comments: post.post_comments.slice(0, 4),
       };
     });
+ */
+    const a = await connection
+      .getRepository(posts)
+      .createQueryBuilder('posts')
+      .select('posts', 'posts.post_comments')
+      /* .innerJoinAndSelect('posts.user', 'user') */
+      /*  .leftJoinAndSelect('posts.post_images', 'post_images') */
+      /*  .limit(1) */
+      .leftJoinAndSelect('posts.post_likes', 'post_likes')
+      /*  .leftJoinAndSelect('post_likes.user', 'post_likes.user') */
+      .leftJoinAndSelect('posts.post_comments', 'post_comments', '', {
+        take: 1,
+      })
+      .innerJoinAndSelect(
+        'posts.post_comments',
+        'post_comments',
+        'post_comments'
+      )
+      /* .limit(3) */
+      /* .leftJoinAndSelect('post_comments.user', 'post_comments.user') */
+      /* .orderBy('post_comments.created_at')
+      .skip(Number(skip))
+      .take(15) */
+      .getQuery();
 
-    return res.status(200).json({ posts: formatedPosts, total });
+    console.log(a);
+    /* return res.status(200).json({ posts: result, total }); */
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ status: 'Error', message: 'failed' });
   }
 };

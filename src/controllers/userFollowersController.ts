@@ -64,6 +64,7 @@ export const unfollowUser = async (
   });
 
   const userErrors = await validate(createdUserFollower);
+
   getRequestErrors(res, userErrors);
 
   if (!followExists) {

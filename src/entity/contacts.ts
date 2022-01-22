@@ -16,7 +16,6 @@ export default class contacts {
   id: string;
 
   @Column()
-  @IsNotEmpty()
   contact_name: string;
 
   @Column()
