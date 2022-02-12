@@ -149,7 +149,31 @@ export const updateUser = async (req: Request, res: Response) => {
     });
   }
 };
+export const getMe = async (req: Request, res: Response) => {
+  const { email } = req.query;
 
+  if (!email) {
+    return res.status(400).send({
+      status: 'error',
+      message: 'email is required',
+    });
+  }
+
+  const connection = getConnection();
+  const result = await connection
+    .getRepository(users)
+    .createQueryBuilder('users')
+    .where(`users.email = '${email}'`)
+    .getOne();
+
+  if (!result) {
+    return res.sendStatus(404);
+  }
+
+  return res.json({
+    ...result,
+  });
+};
 export const getUser = async (req: Request, res: Response) => {
   const { id } = req.params;
 
