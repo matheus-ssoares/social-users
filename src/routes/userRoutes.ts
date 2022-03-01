@@ -4,7 +4,6 @@ import * as userController from '../controllers/userController';
 import { UserRegister } from '../interfaces/userInterfaces';
 const userRoutes = express.Router();
 
-userRoutes.get('/users/:id', userController.getUser);
 userRoutes.get('/users/me', userController.getMe);
 userRoutes.get('/users', userController.getUser);
 
@@ -17,6 +16,6 @@ userRoutes.post(
     userController.userRegister(req, res);
   }
 );
-userRoutes.patch('/users', protect, userController.updateUser);
+userRoutes.patch('/users', userController.updateUser);
 
 export default userRoutes;

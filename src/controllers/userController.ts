@@ -120,12 +120,13 @@ export const updateUser = async (req: Request, res: Response) => {
     biography: yup.string().optional(),
     image: yup.string().optional(),
   });
+
   let toUpdate;
   try {
     toUpdate = await validateSchema.validate(req.body, {
       stripUnknown: true,
     });
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
     res.status(400).json({ error: e.errors.join(', ') });
   }
@@ -135,6 +136,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
     const updatedUser = await userRepository.findOne({ where: { id: userId } });
 
+    console.log(updatedUser);
     if (updatedUser) {
       delete updatedUser.password;
 
@@ -189,12 +191,12 @@ export const getUser = async (req: Request, res: Response) => {
       message: 'id is required',
     });
   }
-
   const connection = getConnection();
   const result = await connection
     .getRepository(users)
     .createQueryBuilder('users')
     .where(`users.id = '${id}'`)
+    .select(['users.id', 'users.name', 'users.image'])
     .getOne();
 
   if (!result) {
