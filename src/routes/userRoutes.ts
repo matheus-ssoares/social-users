@@ -4,8 +4,9 @@ import * as userController from '../controllers/userController';
 import { UserRegister } from '../interfaces/userInterfaces';
 const userRoutes = express.Router();
 
+userRoutes.get('/users/:id', userController.getUser);
 userRoutes.get('/users/me', userController.getMe);
-userRoutes.get('/users/:id', protect, userController.getUser);
+userRoutes.get('/users', userController.getUser);
 
 userRoutes.get('/users/posts/:id/:skip', userController.getPostsByUser);
 

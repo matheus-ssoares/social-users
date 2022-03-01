@@ -38,6 +38,12 @@ export const userRegister = async (
     const userRepository = getRepository(users);
     const contactsRepository = getRepository(contacts);
 
+    if (password.length === 0) {
+      return res
+        .status(400)
+        .json({ status: 'error', massage: 'Password cannot be empty' });
+    }
+
     const hashPassword = await hash(password, 10);
 
     const createdUser = userRepository.create({
@@ -88,7 +94,7 @@ export const userRegister = async (
     });
   } catch (error) {
     await queryRunner.rollbackTransaction();
-
+    console.log('error');
     if (error.code === PostgresErrorCode.UniqueViolation) {
       return res.status(400).send({
         status: 'failed',
@@ -175,7 +181,7 @@ export const getMe = async (req: Request, res: Response) => {
   });
 };
 export const getUser = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const { id } = req.query;
 
   if (!id) {
     return res.status(400).send({

@@ -1,4 +1,10 @@
-import { IsEmail, IsIn, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -57,6 +63,7 @@ export default class users {
 
   @Column()
   @IsNotEmpty()
+  @IsString()
   @MinLength(6)
   password: string;
 
