@@ -7,8 +7,6 @@ const userRoutes = express.Router();
 userRoutes.get('/users/me', userController.getMe);
 userRoutes.get('/users', userController.getUser);
 
-userRoutes.get('/users/posts/:id/:skip', userController.getPostsByUser);
-
 userRoutes.post(
   '/users',
 

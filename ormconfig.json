@@ -4,9 +4,9 @@
   "port": 5432,
   "username": "postgres",
   "password": "postgres",
-  "database": "socialmedia",
+  "database": "socialusers",
   "entities": [
-    "src/entity/*.ts"
+    "./src/entity/*.ts"
   ],
   "migrations": [
     "./src/database/migrations/*.ts"
@@ -14,6 +14,6 @@
   "cli": {
     "migrationsDir": "./src/database/migrations"
   },
-  "logging": false,
+  "logging": true,
   "synchronize": false
 }

@@ -15,11 +15,11 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  ManyToMany,
 } from 'typeorm';
 import addresses from './addresses';
 import contacts from './contacts';
 import posts from './posts';
-import post_likes from './post_likes';
 import user_followers from './user_followers';
 
 export enum Gender {
@@ -73,14 +73,10 @@ export default class users {
   @OneToMany(() => posts, (posts) => posts.user)
   posts: posts[];
 
-  @OneToMany(() => post_likes, (postLikes) => postLikes.user)
-  post_likes: post_likes;
+  @OneToMany(() => user_followers, (user_followers) => user_followers.follower)
+  following: user_followers[];
 
-  @OneToMany(() => user_followers, (user_followers) => user_followers)
-  @JoinColumn({
-    name: 'follower_id',
-    referencedColumnName: 'id',
-  })
+  @OneToMany(() => user_followers, (user_followers) => user_followers.user)
   user_followers: user_followers[];
 
   @OneToOne(() => addresses, (address) => address.user)

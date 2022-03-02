@@ -5,8 +5,6 @@ import cors from 'cors';
 import userRoutes from './routes/userRoutes';
 import './database/connection';
 import authRoutes from './routes/AuthRoutes';
-import postsRoutes from './routes/PostsRoutes';
-import postCommentRoutes from './routes/PostCommentsRoutes';
 import userFollowersRoutes from './routes/UserFollowers';
 
 const PORT = process.env.PORT || 5000;
@@ -22,14 +20,7 @@ app.use(
 );
 app.use(express.json({ limit: '10000mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  index,
-  userRoutes,
-  authRoutes,
-  postsRoutes,
-  postCommentRoutes,
-  userFollowersRoutes
-);
+app.use(index, userRoutes, authRoutes, userFollowersRoutes);
 
 const expressServer = http.createServer(app);
 

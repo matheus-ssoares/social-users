@@ -1,3 +1,4 @@
+import { Jwt, VerifyErrors } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { getConnection, getRepository } from 'typeorm';
 import users from '../entity/User';
@@ -92,7 +93,7 @@ export const userRegister = async (
     return res.status(201).send({
       ...createdUser,
     });
-  } catch (error) {
+  } catch (error: any) {
     await queryRunner.rollbackTransaction();
     console.log('error');
     if (error.code === PostgresErrorCode.UniqueViolation) {
@@ -110,11 +111,20 @@ export const userRegister = async (
 };
 
 export const updateUser = async (req: Request, res: Response) => {
-  const userId = req.body.userId;
+  const id = req.query.id;
 
   const userRepository = getRepository(users);
 
-  //TODO change image updload to multer
+  if (!id) {
+    return res.status(400).json({ status: 'error', message: 'id is required' });
+  }
+
+  const findUser = await userRepository.findOne({ where: { id: id } });
+
+  if (!findUser) {
+    return res.status(400).json({ status: 'error', message: 'user not found' });
+  }
+
   const validateSchema = yup.object().shape({
     name: yup.string().optional(),
     biography: yup.string().optional(),
@@ -132,16 +142,17 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 
   try {
-    await userRepository.update({ id: userId }, { ...toUpdate });
+    await userRepository.update({ id: findUser.id }, { ...toUpdate });
 
-    const updatedUser = await userRepository.findOne({ where: { id: userId } });
+    const updatedUser = await userRepository.findOne({
+      where: { id: findUser.id },
+      select: ['id', 'email', 'biography', 'image', 'name'],
+    });
 
-    console.log(updatedUser);
     if (updatedUser) {
-      delete updatedUser.password;
-
       const rabbitMqNotification = {
         name: updatedUser.name,
+        image: updatedUser.image,
         externalId: updatedUser.id,
       };
       sendMessage(
@@ -191,13 +202,13 @@ export const getUser = async (req: Request, res: Response) => {
       message: 'id is required',
     });
   }
-  const connection = getConnection();
-  const result = await connection
-    .getRepository(users)
-    .createQueryBuilder('users')
-    .where(`users.id = '${id}'`)
-    .select(['users.id', 'users.name', 'users.image'])
-    .getOne();
+  const userRepository = getRepository(users);
+
+  const result = await userRepository.findOne({
+    where: { id },
+    select: ['id', 'name', 'image', 'biography'],
+    relations: ['user_followers', 'user_followers.follower'],
+  });
 
   if (!result) {
     return res.sendStatus(404);
@@ -206,36 +217,4 @@ export const getUser = async (req: Request, res: Response) => {
   return res.json({
     ...result,
   });
-};
-
-export const getPostsByUser = async (req: Request, res: Response) => {
-  const { id, skip } = req.params;
-
-  if (!id || !skip) {
-    return res
-      .status(400)
-      .json({ status: 'Error', message: 'missing required params' });
-  }
-
-  const postsRepository = getRepository(posts);
-
-  try {
-    const [posts, total] = await postsRepository.findAndCount({
-      where: { user_id: id },
-      relations: [
-        'user',
-        'post_images',
-        'post_likes',
-        'post_likes.user',
-        'post_comments',
-        'post_comments.user',
-      ],
-      skip,
-      take: 15,
-      order: { created_at: 'DESC' },
-    });
-    res.json({ total, posts });
-  } catch (error) {
-    return res.status(500).json({ status: 'Error' });
-  }
 };
