@@ -1,20 +1,19 @@
-import { Jwt, VerifyErrors } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { getConnection, getRepository } from 'typeorm';
 import users from '../entity/User';
 import { UserRegister } from '../interfaces/userInterfaces';
 import { hash } from 'bcrypt';
-import addresses from '../entity/addresses';
 import contacts from '../entity/contacts';
-import { validate, IsString, MaxLength, IsEmpty } from 'class-validator';
+import { validate } from 'class-validator';
 import * as yup from 'yup';
-import posts from '../entity/posts';
+
 import { getRequestErrors } from '../utils/getRequestErrors';
 import {
   RabbitMqQueues,
   RabbitMqEventTypes,
 } from '../interfaces/rabbitMqQueues';
 import { sendMessage } from '../modules/rabbitMq';
+import user_followers from '../entity/user_followers';
 
 enum PostgresErrorCode {
   UniqueViolation = '23505',
@@ -203,18 +202,23 @@ export const getUser = async (req: Request, res: Response) => {
     });
   }
   const userRepository = getRepository(users);
+  const userFollowersRepository = getRepository(user_followers);
 
   const result = await userRepository.findOne({
     where: { id },
     select: ['id', 'name', 'image', 'biography'],
-    relations: ['user_followers', 'user_followers.follower'],
   });
 
   if (!result) {
     return res.sendStatus(404);
   }
 
+  const userFollowersAmount = await userFollowersRepository.count({
+    where: { user_id: result!.id },
+  });
+
   return res.json({
     ...result,
+    followersAmount: userFollowersAmount,
   });
 };
