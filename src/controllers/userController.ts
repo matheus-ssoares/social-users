@@ -50,7 +50,6 @@ export const userRegister = async (
       name: name,
       email: email,
       birth_date: birth_date,
-
       gender: gender,
       image: image ? image : '',
       password: hashPassword,
@@ -83,8 +82,13 @@ export const userRegister = async (
       externalId: createdUser.id,
     };
 
-    sendMessage(
-      RabbitMqQueues.SOCIAL_USERS,
+    // await sendMessage(
+    //   RabbitMqQueues.SOCIAL_POSTS,
+    //   rabbitNotificationPayload,
+    //   RabbitMqEventTypes.USER_CREATED
+    // );
+    await sendMessage(
+      { name: 'amq.direct', routingKey: 'social_user_event' },
       rabbitNotificationPayload,
       RabbitMqEventTypes.USER_CREATED
     );
@@ -154,11 +158,16 @@ export const updateUser = async (req: Request, res: Response) => {
         image: updatedUser.image,
         externalId: updatedUser.id,
       };
-      sendMessage(
-        RabbitMqQueues.SOCIAL_USERS,
+      await sendMessage(
+        { name: 'amq.direct', routingKey: 'social_user_event' },
         rabbitMqNotification,
         RabbitMqEventTypes.USER_UPDATED
       );
+      // sendMessage(
+      //   RabbitMqQueues.SOCIAL_USERS,
+      //   rabbitMqNotification,
+      //   RabbitMqEventTypes.USER_UPDATED
+      // );
       return res.json(updatedUser);
     }
   } catch (error) {
@@ -178,6 +187,7 @@ export const getMe = async (req: Request, res: Response) => {
   }
 
   const connection = getConnection();
+  console.log(email);
   const result = await connection
     .getRepository(users)
     .createQueryBuilder('users')

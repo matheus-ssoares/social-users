@@ -1,8 +1,13 @@
 import amqp from 'amqplib/callback_api';
 import { RabbitMqEventTypes } from '../interfaces/rabbitMqQueues';
 
+type exchangeOptions = {
+  name: string;
+  routingKey: string;
+};
+
 export async function sendMessage(
-  queue: string,
+  options: exchangeOptions,
   msg: object,
   eventType: RabbitMqEventTypes
 ) {
@@ -14,13 +19,18 @@ export async function sendMessage(
       connection.createChannel(function (error1, channel) {
         if (error1) throw error1;
 
-        channel.assertQueue(queue, {
-          durable: false,
-        });
-        channel.sendToQueue(
-          queue,
+        // channel.assertQueue(queue, {
+        //   durable: false,
+        // });
+        channel.publish(
+          options.name,
+          options.routingKey,
           Buffer.from(JSON.stringify({ ...msg, eventType }))
         );
+        // channel.sendToQueue(
+        //   queue,
+        //   Buffer.from(JSON.stringify({ ...msg, eventType }))
+        // );
         console.log(' [x] sending %s', msg);
       });
       setTimeout(function () {
